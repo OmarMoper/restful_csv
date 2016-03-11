@@ -1,0 +1,40 @@
+<?php
+/**
+ * @file
+ * CSV import.
+ */
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function restful_csv_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'restful') {
+    return 'plugins/' . $plugin;
+  }
+}
+
+/**
+ * Implements hook_libraries_info().
+ */
+function restful_csv_libraries_info() {
+  return array(
+    'php-jsonparser' => array(
+      'name' => 'Json parser',
+      'xautoload' => function($adapter) {
+          /**
+           * @var \Drupal\xautoload\Adapter\LocalDirectoryAdapter $adapter
+           *   An adapter object that can register stuff into the class loader.
+           */
+          // Register a namespace with PSR-0 root in
+          // 'sites/all/libraries/ruebenkraut/src'.
+          $adapter->composerJson('composer.json');
+          $adapter->composerJson('vendor/keboola/php-utils/composer.json');
+          $adapter->composerJson('vendor/keboola/php-temp/composer.json');
+          $adapter->composerJson('vendor/keboola/csv/composer.json');
+          $adapter->composerJson('vendor/keboola/php-csvtable/composer.json');
+          $adapter->composerJson('vendor/psr/log/composer.json');
+          $adapter->composerJson('vendor/monolog/monolog/composer.json');
+        },
+    ),
+  );
+}
