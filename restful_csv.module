@@ -5,15 +5,6 @@
  */
 
 /**
- * Implements hook_ctools_plugin_directory().
- */
-function restful_csv_ctools_plugin_directory($module, $plugin) {
-  if ($module == 'restful') {
-    return 'plugins/' . $plugin;
-  }
-}
-
-/**
  * Implements hook_libraries_info().
  */
 function restful_csv_libraries_info() {

@@ -4,3 +4,7 @@ core = 7.x
 package = restful
 
 dependencies[] = restful
+dependencies[] = xautoload
+
+registry_autoload[] = PSR-0
+registry_autoload[] = PSR-4

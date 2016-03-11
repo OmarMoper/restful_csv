@@ -2,12 +2,26 @@
 
 /**
  * @file
- * Contains RestfulFormatterJson.
+ * Contains RestfulFormatterCsv.
  */
 
-require_once DRUPAL_ROOT . '/sites/all/modules/contrib/restful/plugins/formatter/json/RestfulFormatterJson.class.php';
+namespace Drupal\restful_csv\Plugin\formatter;
 
-class RestfulFormatterCsv extends \RestfulFormatterBase implements \RestfulFormatterInterface {
+use Drupal\restful\Plugin\formatter\FormatterJson;
+use Drupal\restful\Plugin\formatter\FormatterInterface;
+
+/**
+ * Class FormatterCsv.
+ *
+ * @package Drupal\restful_csv\Plugin\formatter
+ *
+ * @Formatter(
+ *   id = "csv",
+ *   label = "CSV",
+ *   description = "Output in using the CSV format."
+ * )
+ */
+class RestfulFormatterCsv extends FormatterJson implements FormatterInterface {
 
   /**
    * Content Type
@@ -32,10 +46,10 @@ class RestfulFormatterCsv extends \RestfulFormatterBase implements \RestfulForma
   protected $results = array();
 
   /**
-   * Constructor.
+   * {@inheritdoc}
    */
-  public function __construct(array $plugin, $handler = NULL) {
-    parent::__construct($plugin, $handler);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->parser = $this->parser();
   }
 
@@ -52,14 +66,22 @@ class RestfulFormatterCsv extends \RestfulFormatterBase implements \RestfulForma
     return $this->parser;
   }
 
-
   /**
    * {@inheritdoc}
    */
   public function prepare(array $data) {
+    // If we're returning an error then set the content type to
+    // 'application/problem+json; charset=utf-8'.
+    if (!empty($data['status']) && floor($data['status'] / 100) != 2) {
+      $this->contentType = 'application/problem+json; charset=utf-8';
+      return $data;
+    }
+
+    $extracted = $this->extractFieldValues($data);
+    $output = $this->limitFields($extracted);
+
     $this->changeFileName();
-    $data = is_object($data) ? array($data) : $data;
-    $output = $this->dataToObject($data);
+    $output = $this->dataToObject($output);
     return (array) $output;
   }
 
@@ -67,7 +89,7 @@ class RestfulFormatterCsv extends \RestfulFormatterBase implements \RestfulForma
    * Change csv file name to add csv extension.
    */
   public function changeFileName() {
-    header('Content-disposition: filename="' . $this->handler->plugin['resource'] . '.csv"');
+    header('Content-disposition: filename="' . $this->resource->pluginDefinition['resource'] . '.csv"');
   }
 
   /**
@@ -80,7 +102,7 @@ class RestfulFormatterCsv extends \RestfulFormatterBase implements \RestfulForma
    *   Object
    */
   public function dataToObject($array) {
-		$obj = new stdClass;
+		$obj = new \stdClass;
     foreach($array as $k => $v) {
        if(strlen($k)) {
           // If object, convert all properties in object.
@@ -105,7 +127,7 @@ class RestfulFormatterCsv extends \RestfulFormatterBase implements \RestfulForma
    */
   public function objectPropertiesToObject($object) {
     $vars = get_object_vars($object);
-    $new_object = new stdClass;
+    $new_object = new \stdClass;
     foreach ($vars as $property => $var) {
       if (is_array($var)) {
         $new_object->{$property} = $this->dataToObject($var);
